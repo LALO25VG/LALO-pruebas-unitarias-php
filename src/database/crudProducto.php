@@ -46,14 +46,15 @@ catch(Exception $e) {
 function insertar($conn, $tabla, $datosFormulario){
         try {
             // se crea un mapa para asociar cada campo de la tabla con los nombres de los campos del formulario en el atributo name
-            $mapeo = [
-                'codigobarra' => 'txtCodigoBarra',
-                'nombre'      => 'txtNombre',
-                'precio'      => 'txtPrecio',
-                'existencia'  => 'rngCantidad',
-                'idmarca'     => 'cboMarca',
-                'idcategoria' => 'cboCategoria'
-            ];
+                    // Mapear columnas de la BD a los campos del formulario (crear)
+                    $mapeo = [
+                        'codigoBarra' => 'txtCodigoBarra',
+                        'nombre'      => 'txtNombre',
+                        'precio'      => 'txtPrecio',
+                        'existencia'  => 'rngCantidad',
+                        'IDmarca'     => 'cboMarca',
+                        'IDcategoria' => 'cboCategoria'
+                    ];
 
 
             // verifica que cada campo del formulario exista y tenga valor, hace una segunda validación ademàs de la que hace bootstrap
@@ -71,7 +72,8 @@ function insertar($conn, $tabla, $datosFormulario){
 
             // valores es un arreglo que contiene los valores del formulario, mapeados a los campos de la tabla
             // $datosFormulario[$mapeo[$campo]] es como si fuera: $datosFormulario['txtCodigobarra']
-            $valores = array_map(fn($campo) => $datosFormulario[$mapeo[$campo]], $campos); 
+            // Extraer valores en el orden de las columnas
+            $valores = array_map(fn($campo) => $datosFormulario[$mapeo[$campo]], $campos);
 
             // prepar la consulta SQL sin poner valores en cada campo
             // count($campos) Cuenta cuántos campos tienes en tu tabla.
@@ -123,9 +125,17 @@ function insertar($conn, $tabla, $datosFormulario){
        
         try {
              //echo json_encode(["ID" => $datosFormulario]);           
-             $id = $datosFormulario ?? null; 
-             
-             //echo "el id es: ".$id;
+            // $datosFormulario puede ser el id directo o un arreglo con key 'codigoBarra'
+            $id = null;
+            if (is_array($datosFormulario)) {
+                $id = $datosFormulario['codigoBarra'] ?? null;
+            } else {
+                $id = $datosFormulario;
+            }
+
+            if ($id === null || $id === '') {
+                throw new Exception('Falta el identificador para eliminar');
+            }
 
             $sql = "DELETE FROM `$tabla` WHERE `codigoBarra` = ?";
             $statement = $conn->prepare($sql);
@@ -153,12 +163,14 @@ function insertar($conn, $tabla, $datosFormulario){
             $id = $datosFormulario['codigoBarra'];
 
             // Mapeo solo de los campos que se pueden actualizar (sin el ID)
+            // Las claves del arreglo son los nombres de columna en la BD
+            // y los valores son los nombres de los campos que envía el frontend
             $mapeo = [
                 'nombre'      => 'nombre',
                 'precio'      => 'precio',
                 'existencia'  => 'existencia',
-                'idmarca'     => 'IDmarca',
-                'idcategoria' => 'IDcategoria'
+                'IDmarca'     => 'IDmarca',
+                'IDcategoria' => 'IDcategoria'
             ];
 
             // Obtiene solo las claves del mapeo (nombres de columnas de la BD)
@@ -183,7 +195,7 @@ function insertar($conn, $tabla, $datosFormulario){
 
             // Agrega el ID al final del arreglo de valores para usarlo en la cláusula WHERE
             // Ahora $valores tiene: ['Lapicera', '12.5', '20', 'M001', 'C001', '123456']
-            $valores[] = $id; // es como array.push
+            $valores[] = $id; // añade el ID para la cláusula WHERE
 
             // Ejecuta la consulta con todos los valores, aqui asigna acada espacio con ? los valores del array en orden
             $statement->execute($valores);
