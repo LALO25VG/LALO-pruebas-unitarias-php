@@ -1,7 +1,12 @@
+
+
+//enlace a la parte de php, crea un nuevo registro, recibe los datos del formulario y el nombre del archivo php que se va a invocar
 export default class CrudManager {
     constructor(urlBase) {
         this.apiUrl = urlBase;
     }
+
+
 
     async createData(nombreTabla, dataForm, nombreArchivo) {
         try {
@@ -52,6 +57,8 @@ export default class CrudManager {
         }
     }
 
+    
+
     async updateData(nombreTabla, datosFila, nombreArchivo) {
         try {
             const response = await fetch(this.apiUrl + nombreArchivo + '.php',
@@ -71,6 +78,8 @@ export default class CrudManager {
             return { errorServer: 'Error al insertar los datos: ' + error.message }; // manejo de error con el servidor
         }
     }
+
+
     // DELETE 
 
     async deleteData(nombreTabla, datos, nombreArchivo) {
